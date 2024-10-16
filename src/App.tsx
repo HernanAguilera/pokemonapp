@@ -1,35 +1,128 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import { useEffect, useState } from "react";
+import "./App.css";
+import { getPokemons } from "./requests/pokemons";
+
+interface PokemonItem {
+  id: number;
+  name: string;
+  image: string;
+}
 
 function App() {
-  const [count, setCount] = useState(0)
+  const [originalItems, setOriginalItems] = useState<PokemonItem[]>([]);
+  const [items, setItems] = useState<PokemonItem[]>([]);
+  const [readyToBattle, setReadyToBattle] = useState<PokemonItem[]>([]);
+
+  useEffect(() => {
+    if (localStorage.getItem("pokemons")) {
+      setOriginalItems(JSON.parse(localStorage.getItem("pokemons") ?? "[]"));
+      return;
+    }
+    getPokemons().then((data) => {
+      console.log(data.results.length);
+      const dataResults = data.results.map((pokemon: any, index: number) => {
+        return {
+          id: index + 1,
+          name: pokemon.name,
+          image: `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${
+            index + 1
+          }.png`,
+        };
+      });
+      setOriginalItems(dataResults);
+      localStorage.setItem("pokemons", JSON.stringify(dataResults));
+    });
+  }, []);
+
+  useEffect(() => {
+    setItems(originalItems);
+  }, [originalItems]);
+
+  const searchPokemon = (e: any) => {
+    const search = e.target.value;
+    if (search === "") {
+      setItems(originalItems);
+      return;
+    }
+    setItems(
+      items.filter((item: any) => {
+        return item.name.toLowerCase().includes(search.toLowerCase());
+      })
+    );
+  };
+
+  const addPokemonToBattle = (pokemon: PokemonItem) => {
+    setReadyToBattle((prevState) => [...prevState, pokemon]);
+  };
+
+  const removePokemonFromBattle = (id: number) => {
+    console.log(id);
+    setReadyToBattle((prevState) => prevState.filter((item) => item.id !== id));
+  };
+
+  const isReadyToBattle = (pokemon: PokemonItem): boolean => {
+    return readyToBattle.some((item) => item.id === pokemon.id);
+  };
 
   return (
     <>
-      <div>
-        <a href="https://vitejs.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
+      <div className="container">
+        <div className="main-content">
+          <input
+            type="text"
+            placeholder="Que pokemon buscas..."
+            className="search-bar"
+            onChange={searchPokemon}
+          />
+
+          <div className="pokemon-list">
+            {items.map((item, index) => (
+              <div className="pokemon-item" key={index}>
+                <div className="pokemon-image">
+                  <img key={index} src={item.image} alt="pokemon" />
+                </div>
+                <p className="pokemon-name">{item.name}</p>
+                {!isReadyToBattle(item) && (
+                  <button
+                    className="add-button"
+                    onClick={() => addPokemonToBattle(item)}
+                  >
+                    +
+                  </button>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="combat-list">
+          <h2>Listos para el combate</h2>
+          <div className="combat-ready">
+            {readyToBattle.length > 0 ? (
+              readyToBattle.map((item, index) => (
+                <>
+                  <div className="pokemon-item" key={index}>
+                    <div className="combat-image">
+                      <img key={index} src={item.image} alt="pokemon" />
+                    </div>
+                    <p className="combat-name">{item.name}</p>
+                    <button
+                      className="remove-button"
+                      onClick={() => removePokemonFromBattle(item.id)}
+                    >
+                      🗑
+                    </button>
+                  </div>
+                </>
+              ))
+            ) : (
+              <p>No hay pokemones listos para el combate</p>
+            )}
+          </div>
+        </div>
       </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
     </>
-  )
+  );
 }
 
-export default App
+export default App;
