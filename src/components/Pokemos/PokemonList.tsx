@@ -5,9 +5,14 @@ import { Link } from "react-router-dom";
 import { useSelector } from "react-redux";
 import { useDispatch } from "react-redux";
 import { setLoading } from "../../state/generalSlice";
-import { addToreadyToBattle, setPokemons } from "../../state/pokemonSlice";
+import {
+  addToreadyToBattle,
+  setOriginalPokemons,
+  setPokemons,
+} from "../../state/pokemonSlice";
 import { PokemonItem } from "../../models";
 import ReadyToBattle from "./readyToBattle";
+import { capitalize } from "../../utils";
 
 function PokemonList() {
   const dispatch = useDispatch();
@@ -36,6 +41,7 @@ function PokemonList() {
             }
           );
           dispatch(setPokemons(dataResults));
+          dispatch(setOriginalPokemons(dataResults));
         })
         .finally(() => {
           dispatch(setLoading(false));
@@ -43,16 +49,23 @@ function PokemonList() {
     }
   }, []);
 
+  console.log({ originalItems });
+
   const searchPokemon = (e: any) => {
     const search = e.target.value;
     if (search === "") {
       dispatch(setPokemons(originalItems));
       return;
     }
-    setPokemons(
-      pokemons.filter((item: any) => {
-        return item.name.toLowerCase().includes(search.toLowerCase());
-      })
+    dispatch(
+      setPokemons(
+        originalItems.filter((item: any) => {
+          if (parseInt(search) === parseInt(item.id)) {
+            return true;
+          }
+          return item.name.toLowerCase().includes(search.toLowerCase());
+        })
+      )
     );
   };
 
@@ -84,7 +97,9 @@ function PokemonList() {
                   </Link>
                 </div>
                 <p className="pokemon-name">
-                  <Link to={`/pokemons/${item.id}`}>{item.name}</Link>
+                  <Link to={`/pokemons/${item.id}`}>
+                    {capitalize(item.name)}
+                  </Link>
                 </p>
                 {!isReadyToBattle(item) && (
                   <button

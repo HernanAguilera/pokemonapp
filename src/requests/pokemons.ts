@@ -5,7 +5,14 @@ export const getPokemons = async () => {
 };
 
 export const getPokemon = async (id: string | number) => {
-  const response = await fetch(`https://pokeapi.co/api/v2/pokemon/${id}`);
-  const data = await response.json();
-  return data;
+  try {
+    const response = await fetch(`https://pokeapi.co/api/v2/pokemon/${id}`);
+    if (!response.ok) {
+      return Promise.reject(response);
+    }
+    const data = await response.json();
+    return data;
+  } catch (e) {
+    return Promise.reject(e);
+  }
 };

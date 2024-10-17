@@ -17,9 +17,12 @@ const pokemonsSlice = createSlice({
   name: "pokemons",
   initialState,
   reducers: {
+    setOriginalPokemons: (state, action) => {
+      state.originalPokemons = action.payload;
+    },
     setPokemons: (state, action) => {
       state.pokemons = action.payload;
-      localStorage.setItem("pokemons", JSON.stringify(state.pokemons));
+      localStorage.setItem("pokemons", JSON.stringify(action.payload));
     },
     addPokemons: (state, action) => {
       state.pokemons.push(action.payload);
@@ -67,6 +70,7 @@ const pokemonsSlice = createSlice({
 
 export const {
   setPokemons,
+  setOriginalPokemons,
   addPokemons,
   removePokemons,
   addToreadyToBattle,
