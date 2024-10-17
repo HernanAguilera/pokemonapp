@@ -16,22 +16,27 @@ function App() {
   useEffect(() => {
     if (localStorage.getItem("pokemons")) {
       setOriginalItems(JSON.parse(localStorage.getItem("pokemons") ?? "[]"));
-      return;
-    }
-    getPokemons().then((data) => {
-      console.log(data.results.length);
-      const dataResults = data.results.map((pokemon: any, index: number) => {
-        return {
-          id: index + 1,
-          name: pokemon.name,
-          image: `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${
-            index + 1
-          }.png`,
-        };
+    } else {
+      getPokemons().then((data) => {
+        console.log(data.results.length);
+        const dataResults = data.results.map((pokemon: any, index: number) => {
+          return {
+            id: index + 1,
+            name: pokemon.name,
+            image: `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${
+              index + 1
+            }.png`,
+          };
+        });
+        setOriginalItems(dataResults);
+        localStorage.setItem("pokemons", JSON.stringify(dataResults));
       });
-      setOriginalItems(dataResults);
-      localStorage.setItem("pokemons", JSON.stringify(dataResults));
-    });
+    }
+    if (localStorage.getItem("readyToBattle")) {
+      setReadyToBattle(
+        JSON.parse(localStorage.getItem("readyToBattle") ?? "[]")
+      );
+    }
   }, []);
 
   useEffect(() => {
@@ -53,11 +58,20 @@ function App() {
 
   const addPokemonToBattle = (pokemon: PokemonItem) => {
     setReadyToBattle((prevState) => [...prevState, pokemon]);
+    localStorage.setItem(
+      "readyToBattle",
+      JSON.stringify([...readyToBattle, pokemon])
+    );
   };
 
   const removePokemonFromBattle = (id: number) => {
-    console.log(id);
-    setReadyToBattle((prevState) => prevState.filter((item) => item.id !== id));
+    const PokemonList = readyToBattle.filter((item) => item.id !== id);
+    setReadyToBattle(PokemonList);
+    if (PokemonList.length === 0) {
+      localStorage.removeItem("readyToBattle");
+    } else {
+      localStorage.setItem("readyToBattle", JSON.stringify(PokemonList));
+    }
   };
 
   const isReadyToBattle = (pokemon: PokemonItem): boolean => {
@@ -79,7 +93,9 @@ function App() {
             {items.map((item, index) => (
               <div className="pokemon-item" key={index}>
                 <div className="pokemon-image">
-                  <img key={index} src={item.image} alt="pokemon" />
+                  <a href={`/pokemons/${item.id}`}>
+                    <img key={index} src={item.image} alt="pokemon" />
+                  </a>
                 </div>
                 <p className="pokemon-name">{item.name}</p>
                 {!isReadyToBattle(item) && (

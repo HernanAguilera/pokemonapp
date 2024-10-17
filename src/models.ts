@@ -14,10 +14,16 @@ type Pokemon = {
   };
 };
 
+interface PokemonItem {
+  id: number;
+  name: string;
+  image: string;
+}
+
 type AppState = {
   pokemons: Pokemon[];
   searchQuery: string;
   combatReady: Pokemon[];
 };
 
-export type { AppState, Pokemon };
+export type { AppState, Pokemon, PokemonItem };
